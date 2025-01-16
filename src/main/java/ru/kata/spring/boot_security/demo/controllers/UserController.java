@@ -1,9 +1,11 @@
 package ru.kata.spring.boot_security.demo.controllers;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import ru.kata.spring.boot_security.demo.entities.Role;
 import ru.kata.spring.boot_security.demo.entities.User;
 import ru.kata.spring.boot_security.demo.services.UserService;
@@ -11,7 +13,7 @@ import ru.kata.spring.boot_security.demo.services.UserService;
 import java.security.Principal;
 import java.util.List;
 
-@Controller
+@RestController
 @RequestMapping("/user")
 public class UserController {
     private final UserService userService;
@@ -21,15 +23,8 @@ public class UserController {
     }
 
     @GetMapping
-    public String showUser(Model model, Principal principal) {
+    public ResponseEntity<User> showUser(Principal principal) {
         User user = userService.findByEmail(principal.getName()).orElse(new User());
-        List<String> roles = user.getRoles().stream()
-                .map(Role::getName)
-                .map(role -> role.split("_")[1])
-                .toList();
-        model.addAttribute("authUser", user);
-        model.addAttribute("userRoles", roles);
-        return "/user/user-info";
+        return ResponseEntity.ok(user); // Отправляем пользователя в виде JSON
     }
-
 }

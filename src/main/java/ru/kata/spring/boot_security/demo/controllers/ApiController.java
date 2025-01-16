@@ -4,7 +4,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import ru.kata.spring.boot_security.demo.entities.Role;
 import ru.kata.spring.boot_security.demo.entities.User;
+import ru.kata.spring.boot_security.demo.services.RoleService;
 import ru.kata.spring.boot_security.demo.services.UserService;
 import ru.kata.spring.boot_security.demo.util.UserErrorResponse;
 import ru.kata.spring.boot_security.demo.util.UserNotCreatedException;
@@ -17,6 +19,7 @@ import java.util.Optional;
 @RequestMapping("/api")
 public class ApiController {
     private final UserService userService;
+    private RoleService roleService;
 
     public ApiController(UserService userService) {
         this.userService = userService;
@@ -49,6 +52,13 @@ public class ApiController {
     @PatchMapping("/users")
     public ResponseEntity<HttpStatus> editUser(@RequestBody @Valid User user,
                                                BindingResult bindingResult) {
+        // Если роли нет, назначаем роль по умолчанию
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            Role defaultRole = roleService.findByName("ROLE_USER")
+                    .orElseThrow(() -> new RuntimeException("Default role not found"));
+            user.setRoles(List.of(defaultRole)); // Устанавливаем роль по умолчанию
+        }
+
         if (bindingResult.hasErrors()) {
             List<String> errorMessages = bindingResult.getFieldErrors().stream()
                     .map(error -> error.getDefaultMessage())
